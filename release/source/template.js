@@ -99,32 +99,37 @@ let Template = Template_1 = class Template extends Control.Component {
         this.assignProperties();
     }
     /**
-     * Enable or disable the specified property in the mark elements.
+     * Enable or disable the specified property in this elements.
      * @param property Property name.
      * @param state Determines whether the property must be enabled or disabled.
      */
-    setMarkProperty(property, state) {
-        const list = this.markSlot.assignedNodes();
-        for (const mark of list) {
-            if (state) {
-                mark.dataset[property] = 'on';
-            }
-            else {
-                delete mark.dataset[property];
-            }
+    setDataProperty(property, state) {
+        if (state) {
+            this.skeleton.dataset[property] = 'on';
+        }
+        else {
+            delete this.skeleton.dataset[property];
         }
     }
     /**
-     * Uncheck the last radiobox in the same group.
+     * Toggles this radio by the last toggled radio.
+     * @param force Determines whether the same radio must be unchecked.
+     * @returns Returns the last radio or undefined when there is no last radio.
      */
-    uncheckLast() {
+    toggleRadio(force) {
         const last = Template_1.groups[this.group];
-        if (last !== this.skeleton) {
-            Template_1.groups[this.group] = this.skeleton;
+        if (last === this.skeleton) {
+            if (force) {
+                Template_1.groups[this.group] = void 0;
+            }
+        }
+        else {
             if (last) {
                 last.checked = false;
             }
+            Template_1.groups[this.group] = this.skeleton;
         }
+        return last;
     }
     /**
      * Click event handler.
@@ -135,27 +140,34 @@ let Template = Template_1 = class Template extends Control.Component {
             event.preventDefault();
         }
         else {
-            this.uncheckLast();
+            const last = this.toggleRadio(false);
+            if (last !== this.skeleton) {
+                if (last) {
+                    Template_1.notifyChanges(last);
+                }
+                this.setDataProperty('checked', true);
+                Template_1.notifyChanges(this.skeleton);
+            }
         }
     }
     /**
      * Bind event handlers to update the custom element.
      */
     bindHandlers() {
-        this.skeleton.addEventListener('click', Class.bindCallback(this.clickHandler), true);
+        this.input.addEventListener('click', this.clickHandler.bind(this));
     }
     /**
      * Bind exposed properties to the custom element.
      */
     bindProperties() {
         Object.defineProperties(this.skeleton, {
-            name: super.bindDescriptor(Template_1.prototype, 'name'),
-            group: super.bindDescriptor(Template_1.prototype, 'group'),
-            value: super.bindDescriptor(Template_1.prototype, 'value'),
-            checked: super.bindDescriptor(Template_1.prototype, 'checked'),
-            required: super.bindDescriptor(Template_1.prototype, 'required'),
-            readOnly: super.bindDescriptor(Template_1.prototype, 'readOnly'),
-            disabled: super.bindDescriptor(Template_1.prototype, 'disabled')
+            name: super.bindDescriptor(this, Template_1.prototype, 'name'),
+            group: super.bindDescriptor(this, Template_1.prototype, 'group'),
+            value: super.bindDescriptor(this, Template_1.prototype, 'value'),
+            checked: super.bindDescriptor(this, Template_1.prototype, 'checked'),
+            required: super.bindDescriptor(this, Template_1.prototype, 'required'),
+            readOnly: super.bindDescriptor(this, Template_1.prototype, 'readOnly'),
+            disabled: super.bindDescriptor(this, Template_1.prototype, 'disabled')
         });
     }
     /**
@@ -210,9 +222,9 @@ let Template = Template_1 = class Template extends Control.Component {
      * Set checked state.
      */
     set checked(state) {
-        if ((this.input.checked = state)) {
-            this.uncheckLast();
-        }
+        this.setDataProperty('checked', state);
+        this.input.checked = state;
+        this.toggleRadio(!state);
     }
     /**
      * Get required state.
@@ -224,6 +236,7 @@ let Template = Template_1 = class Template extends Control.Component {
      * Set required state.
      */
     set required(state) {
+        this.setDataProperty('required', state);
         this.input.required = state;
     }
     /**
@@ -236,7 +249,7 @@ let Template = Template_1 = class Template extends Control.Component {
      * Set read-only state.
      */
     set readOnly(state) {
-        this.setMarkProperty('readonly', state);
+        this.setDataProperty('readonly', state);
         this.input.readOnly = state;
     }
     /**
@@ -249,7 +262,7 @@ let Template = Template_1 = class Template extends Control.Component {
      * Set disabled state.
      */
     set disabled(state) {
-        this.setMarkProperty('disabled', state);
+        this.setDataProperty('disabled', state);
         this.input.disabled = state;
     }
     /**
@@ -258,9 +271,17 @@ let Template = Template_1 = class Template extends Control.Component {
     get element() {
         return this.skeleton;
     }
+    /**
+     * Notify element changes.
+     */
+    static notifyChanges(element) {
+        if (document.body.contains(element)) {
+            element.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }));
+        }
+    }
 };
 /**
- * Radio button groups.
+ * Radiobox groups.
  */
 Template.groups = {};
 __decorate([
@@ -285,11 +306,11 @@ __decorate([
     Class.Private()
 ], Template.prototype, "elements", void 0);
 __decorate([
-    Class.Private()
-], Template.prototype, "setMarkProperty", null);
+    Class.Protected()
+], Template.prototype, "setDataProperty", null);
 __decorate([
     Class.Private()
-], Template.prototype, "uncheckLast", null);
+], Template.prototype, "toggleRadio", null);
 __decorate([
     Class.Private()
 ], Template.prototype, "clickHandler", null);
@@ -329,6 +350,9 @@ __decorate([
 __decorate([
     Class.Private()
 ], Template, "groups", void 0);
+__decorate([
+    Class.Private()
+], Template, "notifyChanges", null);
 Template = Template_1 = __decorate([
     Class.Describe()
 ], Template);

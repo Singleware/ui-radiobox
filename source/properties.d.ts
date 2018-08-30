@@ -22,7 +22,7 @@ export interface Properties {
   /**
    * Radiobox group.
    */
-  group?: string;
+  group: string;
   /**
    * Radiobox value.
    */

@@ -108,34 +108,38 @@ export class Template extends Control.Component<Properties> {
   private elements: ShadowRoot = DOM.append(this.skeleton.attachShadow({ mode: 'closed' }), this.styles, this.radiobox) as ShadowRoot;
 
   /**
-   * Enable or disable the specified property in the mark elements.
+   * Enable or disable the specified property in this elements.
    * @param property Property name.
    * @param state Determines whether the property must be enabled or disabled.
    */
-  @Class.Private()
-  private setMarkProperty(property: string, state: boolean): void {
-    const list = this.markSlot.assignedNodes() as HTMLElement[];
-    for (const mark of list) {
-      if (state) {
-        mark.dataset[property] = 'on';
-      } else {
-        delete mark.dataset[property];
-      }
+  @Class.Protected()
+  protected setDataProperty(property: string, state: boolean): void {
+    if (state) {
+      this.skeleton.dataset[property] = 'on';
+    } else {
+      delete this.skeleton.dataset[property];
     }
   }
 
   /**
-   * Uncheck the last radiobox in the same group.
+   * Toggles this radio by the last toggled radio.
+   * @param force Determines whether the same radio must be unchecked.
+   * @returns Returns the last radio or undefined when there is no last radio.
    */
   @Class.Private()
-  private uncheckLast(): void {
+  private toggleRadio(force: boolean): Element | undefined {
     const last = Template.groups[this.group];
-    if (last !== this.skeleton) {
-      Template.groups[this.group] = this.skeleton;
+    if (last === this.skeleton) {
+      if (force) {
+        Template.groups[this.group] = void 0;
+      }
+    } else {
       if (last) {
         last.checked = false;
       }
+      Template.groups[this.group] = this.skeleton;
     }
+    return last;
   }
 
   /**
@@ -147,7 +151,14 @@ export class Template extends Control.Component<Properties> {
     if (this.input.readOnly) {
       event.preventDefault();
     } else {
-      this.uncheckLast();
+      const last = this.toggleRadio(false);
+      if (last !== this.skeleton) {
+        if (last) {
+          Template.notifyChanges(last);
+        }
+        this.setDataProperty('checked', true);
+        Template.notifyChanges(this.skeleton);
+      }
     }
   }
 
@@ -156,7 +167,7 @@ export class Template extends Control.Component<Properties> {
    */
   @Class.Private()
   private bindHandlers(): void {
-    this.skeleton.addEventListener('click', Class.bindCallback(this.clickHandler), true);
+    this.input.addEventListener('click', this.clickHandler.bind(this));
   }
 
   /**
@@ -165,13 +176,13 @@ export class Template extends Control.Component<Properties> {
   @Class.Private()
   private bindProperties(): void {
     Object.defineProperties(this.skeleton, {
-      name: super.bindDescriptor(Template.prototype, 'name'),
-      group: super.bindDescriptor(Template.prototype, 'group'),
-      value: super.bindDescriptor(Template.prototype, 'value'),
-      checked: super.bindDescriptor(Template.prototype, 'checked'),
-      required: super.bindDescriptor(Template.prototype, 'required'),
-      readOnly: super.bindDescriptor(Template.prototype, 'readOnly'),
-      disabled: super.bindDescriptor(Template.prototype, 'disabled')
+      name: super.bindDescriptor(this, Template.prototype, 'name'),
+      group: super.bindDescriptor(this, Template.prototype, 'group'),
+      value: super.bindDescriptor(this, Template.prototype, 'value'),
+      checked: super.bindDescriptor(this, Template.prototype, 'checked'),
+      required: super.bindDescriptor(this, Template.prototype, 'required'),
+      readOnly: super.bindDescriptor(this, Template.prototype, 'readOnly'),
+      disabled: super.bindDescriptor(this, Template.prototype, 'disabled')
     });
   }
 
@@ -252,9 +263,9 @@ export class Template extends Control.Component<Properties> {
    * Set checked state.
    */
   public set checked(state: boolean) {
-    if ((this.input.checked = state)) {
-      this.uncheckLast();
-    }
+    this.setDataProperty('checked', state);
+    this.input.checked = state;
+    this.toggleRadio(!state);
   }
 
   /**
@@ -269,6 +280,7 @@ export class Template extends Control.Component<Properties> {
    * Set required state.
    */
   public set required(state: boolean) {
+    this.setDataProperty('required', state);
     this.input.required = state;
   }
 
@@ -284,7 +296,7 @@ export class Template extends Control.Component<Properties> {
    * Set read-only state.
    */
   public set readOnly(state: boolean) {
-    this.setMarkProperty('readonly', state);
+    this.setDataProperty('readonly', state);
     this.input.readOnly = state;
   }
 
@@ -300,7 +312,7 @@ export class Template extends Control.Component<Properties> {
    * Set disabled state.
    */
   public set disabled(state: boolean) {
-    this.setMarkProperty('disabled', state);
+    this.setDataProperty('disabled', state);
     this.input.disabled = state;
   }
 
@@ -313,8 +325,18 @@ export class Template extends Control.Component<Properties> {
   }
 
   /**
-   * Radio button groups.
+   * Radiobox groups.
    */
   @Class.Private()
   private static groups = {} as any;
+
+  /**
+   * Notify element changes.
+   */
+  @Class.Private()
+  private static notifyChanges(element: Element): void {
+    if (document.body.contains(element)) {
+      element.dispatchEvent(new Event('change', { bubbles: true, cancelable: false }));
+    }
+  }
 }

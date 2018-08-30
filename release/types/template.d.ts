@@ -34,15 +34,17 @@ export declare class Template extends Control.Component<Properties> {
      */
     private elements;
     /**
-     * Enable or disable the specified property in the mark elements.
+     * Enable or disable the specified property in this elements.
      * @param property Property name.
      * @param state Determines whether the property must be enabled or disabled.
      */
-    private setMarkProperty;
+    protected setDataProperty(property: string, state: boolean): void;
     /**
-     * Uncheck the last radiobox in the same group.
+     * Toggles this radio by the last toggled radio.
+     * @param force Determines whether the same radio must be unchecked.
+     * @returns Returns the last radio or undefined when there is no last radio.
      */
-    private uncheckLast;
+    private toggleRadio;
     /**
      * Click event handler.
      * @param event Event information.
@@ -120,7 +122,11 @@ export declare class Template extends Control.Component<Properties> {
      */
     readonly element: Element;
     /**
-     * Radio button groups.
+     * Radiobox groups.
      */
     private static groups;
+    /**
+     * Notify element changes.
+     */
+    private static notifyChanges;
 }
