@@ -24,6 +24,14 @@ export interface Element extends HTMLDivElement {
    */
   checked: boolean;
   /**
+   * Default radiobox value.
+   */
+  readonly defaultValue: any;
+  /**
+   * Default checked state.
+   */
+  readonly defaultChecked: boolean;
+  /**
    * Required state.
    */
   required: boolean;

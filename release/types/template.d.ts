@@ -30,21 +30,11 @@ export declare class Template extends Control.Component<Properties> {
      */
     private skeleton;
     /**
-     * Radiobox elements.
-     */
-    private elements;
-    /**
      * Enable or disable the specified property in this elements.
      * @param property Property name.
      * @param state Determines whether the property must be enabled or disabled.
      */
     protected setDataProperty(property: string, state: boolean): void;
-    /**
-     * Toggles this radio by the last toggled radio.
-     * @param force Determines whether the same radio must be unchecked.
-     * @returns Returns the last radio or undefined when there is no last radio.
-     */
-    private toggleRadio;
     /**
      * Click event handler.
      * @param event Event information.
@@ -97,6 +87,14 @@ export declare class Template extends Control.Component<Properties> {
     */
     checked: boolean;
     /**
+     * Get default radiobox value.
+     */
+    readonly defaultValue: any;
+    /**
+     * Get default checked state.
+     */
+    readonly defaultChecked: boolean;
+    /**
      * Get required state.
      */
     /**
@@ -121,6 +119,10 @@ export declare class Template extends Control.Component<Properties> {
      * Radiobox element.
      */
     readonly element: Element;
+    /**
+     * Reset the radiobox to its initial value and state.
+     */
+    reset(): void;
     /**
      * Radiobox groups.
      */
