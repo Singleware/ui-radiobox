@@ -11,4 +11,8 @@ export interface States {
    * Radiobox name.
    */
   name: string;
+  /**
+   * Determines whether the radiobox must return status or value.
+   */
+  statusOnly: boolean;
 }

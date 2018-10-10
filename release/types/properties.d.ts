@@ -44,6 +44,10 @@ export interface Properties {
    */
   disabled?: boolean;
   /**
+   * Determines whether the radiobox must return status or value.
+   */
+  statusOnly?: boolean;
+  /**
    * Radiobox children.
    */
   children?: {};
